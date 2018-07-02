@@ -4,4 +4,3 @@
 2. 执行 ```pip install -r requirements.txt``` 安装项目所需要的包
 3. 执行 ``` python run.py ```即启动了项目
 
-###二、目录结构说明
