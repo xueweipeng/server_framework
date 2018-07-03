@@ -19,3 +19,4 @@ tasklog
 *pyc
 *curr_config.py
 venv/
+*.pyc
