@@ -1,4 +1,5 @@
 ###一、使用方法
+
 0. 该项目仅适合于简单的项目
 1. 确保开发机上有python，且版本在3.5以上
 2. 项目跟目录下执行 ```python3 -m venv venv && source ./venv/bin/active```
@@ -19,4 +20,5 @@
 │   └── resource # 存放静态文件的目录
 ├── requirements.txt # 依赖包配置项
 └── run.py # 启动入库
+
 ```
