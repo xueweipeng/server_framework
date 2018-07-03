@@ -20,3 +20,4 @@ tasklog
 *curr_config.py
 venv/
 *.pyc
+.idea/*
