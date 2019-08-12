@@ -1,5 +1,6 @@
 from flask import jsonify
 from flask import Blueprint
+
 bp_business1 = Blueprint("business1", __name__)
 
 
