@@ -44,7 +44,7 @@ def user_login():
 
 # 用户注册 参数为手机号与验证码
 @login.route('/register', methods=['GET'])
-def user_login():
+def user_register():
     phone = request.args.get('phone')
     authcode = request.args.get('authcode')
     data = {
@@ -59,7 +59,7 @@ def user_login():
 
 # 设置密码 参数为手机号和密码（两次密码）
 @login.route('/setpassword', methods=['GET'])
-def find_password():
+def set_password():
     phone = request.args.get('phone')
     password1 = request.args.get('password1')
     password2 = request.args.get('password2')
