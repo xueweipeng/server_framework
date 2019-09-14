@@ -23,6 +23,8 @@ def register_route(app):
     app.register_blueprint(lesson, url_prefix='/lesson')
     from main.api.profile_interface import profile
     app.register_blueprint(profile, url_prefix='/profile')
+    from main.api.upgrade_interface import upgrade
+    app.register_blueprint(upgrade, url_prefix='/upgrade')
     return app
 
 

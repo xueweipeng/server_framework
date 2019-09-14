@@ -21,3 +21,4 @@ tasklog
 venv/
 *.pyc
 .idea/*
+logs/

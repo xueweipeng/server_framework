@@ -1,1 +1,8 @@
+werkzeug
+ujson
+redis
+conf
+blue
+crypto
+pymysql
 Flask==0.12.2

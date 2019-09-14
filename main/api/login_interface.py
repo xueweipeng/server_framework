@@ -2,6 +2,7 @@ from flask import jsonify
 from flask import Blueprint
 from flask import request
 
+
 login = Blueprint("login", __name__)
 
 
@@ -19,11 +20,34 @@ def get_auth_code():
     return jsonify(data)
 
 
+# 用户登录 参数为手机号和验证码
+@login.route('/phone', methods=['GET'])
+def user_login_with_phone():
+    phone = request.args.get('phone')
+    authcode = request.args.get('authcode')
+    data = {
+        "data": {
+            "user": {
+                "name": phone,
+                "sex": "male",
+                "phone": "18519661369",
+                "avatar": "http://www.ecfo.com.cn/img2/elevenV.png",
+                "birth": "1900/01/01",
+                "signature": "我思故我在",
+                "token": "1212asfasdfasdfsdf"
+            }
+        },
+        "code": 200,
+        "message": "success"
+    }
+    return jsonify(data)
+
+
 # 用户登录 参数为用户名和密码
 @login.route('/user', methods=['GET'])
-def user_login():
+def user_login_with_user_name():
     user_name = request.args.get('user_name')
-    password = request.args.get('password')
+    password = request.args.get('pwd')
     data = {
         "data": {
             "user": {
