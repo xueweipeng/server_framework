@@ -5,4 +5,4 @@ conf
 blue
 crypto
 pymysql
-Flask==0.12.2
+Flask==1.0
