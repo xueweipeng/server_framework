@@ -6,12 +6,15 @@ from flask import Flask, render_template, jsonify, request, send_from_directory
 import time
 import os
 import base64
+
+from main.api import network_constants
+from main.common import business_util
 from main.common.logger import Logger
 
 profile = Blueprint("profile", __name__)
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'JPG', 'PNG', 'jpeg'])
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'JPG', 'PNG', 'jpeg', 'JPEG'])
 logger = Logger("profile_interface")
 
 
@@ -59,17 +62,27 @@ def get_profile():
     token = data.get("token")
     print("token = %s" % token)
     # 用token解密后查询用户资料
-    data = {
-        "data": {
-            "avatar": "http://www.ecfo.com.cn/img2/elevenV.png",
-            "nick_name": "ecfo_manager",
-            "signature": "hello",
-            "sex": "male",
-            "birthday": "1990",
-            "education": "博士",
-            "industry": "互联网",
-        },
-        "code": 200,
-        "message": "success"
-    }
+    user = business_util.getUserFromToken(token)
+    if user is not None:
+        data = {
+            "data": {
+                "avatar": user.getAvatar(),
+                "nick_name": user.getNickName(),
+                "signature": user.getSignature(),
+                "sex": user.getSex(),
+                "birthday": user.getBirthday(),
+                "education": user.getEducation(),
+                "industry": user.getIndustry(),
+            },
+            "code": network_constants.CODE_SUCCESS,
+            "message": network_constants.MESSAGE_SUCCESS
+        }
+    else:
+        data = {
+            "data": {
+
+            },
+            "code": network_constants.CODE_FAIL,
+            "message": network_constants.MESSAGE_USER_NOT_FOUND
+        }
     return jsonify(data)

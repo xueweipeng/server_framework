@@ -1,3 +1,4 @@
+modbus_tk
 werkzeug
 ujson
 redis

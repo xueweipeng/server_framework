@@ -2,6 +2,7 @@ from flask import jsonify
 from flask import Blueprint
 from flask import request
 
+from main.common import business_util
 
 login = Blueprint("login", __name__)
 
@@ -21,25 +22,54 @@ def get_auth_code():
 
 
 # 用户登录 参数为手机号和验证码
+def checkPhoneAndAuthcode(phone, authcode):
+    return True
+
+
 @login.route('/phone', methods=['GET'])
 def user_login_with_phone():
     phone = request.args.get('phone')
     authcode = request.args.get('authcode')
-    data = {
-        "data": {
-            "user": {
-                "name": phone,
-                "sex": "male",
-                "phone": "18519661369",
-                "avatar": "http://www.ecfo.com.cn/img2/elevenV.png",
-                "birth": "1900/01/01",
-                "signature": "我思故我在",
-                "token": "1212asfasdfasdfsdf"
+    success = checkPhoneAndAuthcode(phone, authcode)
+    if success:
+        token = business_util.getTokenFromUserPhone(phone)
+        user = business_util.getUserFromToken(token)
+        if user is not None:
+            data = {
+                "data": {
+                    "user": {
+                        "name": user.getNickName(),
+                        "sex": user.getSex(),
+                        "phone": phone,
+                        "avatar": user.getAvatar(),
+                        "birth": user.getBirthday(),
+                        "signature": user.getSignature(),
+                        "token": token
+                    }
+                },
+                "code": 200,
+                "message": "success"
             }
-        },
-        "code": 200,
-        "message": "success"
-    }
+        else:
+            data = {
+                "data": {
+                    "user": {
+
+                    }
+                },
+                "code": 300,
+                "message": "success"
+            }
+    else:
+        data = {
+            "data": {
+                "user": {
+
+                }
+            },
+            "code": 300,
+            "message": "验证码验证失败"
+        }
     return jsonify(data)
 
 
