@@ -1,20 +1,26 @@
+import socket
+
 import modbus_tk
 import modbus_tk.modbus_tcp as modbus_tcp
-from flask import Blueprint
+from flask import Blueprint, request, jsonify
 import modbus_tk.defines as cst
+
 logger = modbus_tk.utils.create_logger("console")
 
-modbus = Blueprint(("modbus", __name__))
+modbus = Blueprint("modbus", __name__)
 modbus_address = "192.168.1.66"
+move_action_key = "verticalPointMove"
+
+# 连接MODBUS TCP从机
+master = modbus_tcp.TcpMaster(host=modbus_address)
+master.set_timeout(5.0)
+logger.info("modbus connected")
 
 
 @modbus.route('/test', methods=['POST'], strict_slashes=False)
 def modbus_tcp_test():
     try:
-        # 连接MODBUS TCP从机
-        master = modbus_tcp.TcpMaster(host=modbus_address)
-        master.set_timeout(5.0)
-        logger.info("connected")
+
         # 读保持寄存器
         demo1 = master.execute(1, cst.READ_HOLDING_REGISTERS, 0, 9)
         print(demo1)
@@ -41,3 +47,401 @@ def modbus_tcp_test():
         logger.info(master.execute(2, cst.READ_COILS, 0, 4))
     except modbus_tk.modbus.ModbusError as e:
         logger.error("%s- Code=%d" % (e, e.get_exception_code()))
+
+
+@modbus.route('/frontPointMoveAction', methods=['POST'])
+def front_point_move_action():
+    data = request.get_json()
+    # 1 启动 0 停止
+    action = data.get(move_action_key)
+    ret_code = 0
+    try:
+        master.execute(1, cst.WRITE_SINGLE_COIL, 11, output_value=action)
+        c01 = master.execute(1, cst.READ_COILS, 1, 1)
+        if c01 == 0:
+            master.execute(1, cst.WRITE_SINGLE_COIL, 1, output_value=1)
+
+        c16 = master.execute(1, cst.READ_COILS, 16, 1)
+        if c16 == 1:
+            master.execute(1, cst.WRITE_SINGLE_COIL, 16, 0)
+    except modbus_tk.modbus.ModbusError as e:
+        logger.error("%s- Code=%d" % (e, e.get_exception_code()))
+    except socket.timeout as e1:
+        ret_code = 1
+    if ret_code == 0:
+        ret_data = {
+            "code": 0,
+            "message": "success",
+            "success": 1
+        }
+    else:
+        ret_data = {
+            "code": ret_code,
+            "message": "fail",
+            "success": 0
+        }
+    return jsonify(ret_data)
+
+
+@modbus.route('/backPointMoveAction', methods=['POST'])
+def back_point_move_action():
+    data = request.get_json()
+    # 1 启动 0 停止
+    action = data.get(move_action_key)
+    ret_code = 0
+    try:
+        master.execute(1, cst.WRITE_SINGLE_COIL, 12, output_value=action)
+        c01 = master.execute(1, cst.READ_COILS, 1, 1)
+        if c01 == 0:
+            master.execute(1, cst.WRITE_SINGLE_COIL, 1, output_value=1)
+
+        c16 = master.execute(1, cst.READ_COILS, 16, 1)
+        if c16 == 1:
+            master.execute(1, cst.WRITE_SINGLE_COIL, 16, 0)
+    except modbus_tk.modbus.ModbusError as e:
+        logger.error("%s- Code=%d" % (e, e.get_exception_code()))
+    except socket.timeout as e1:
+        ret_code = 1
+    if ret_code == 0:
+        ret_data = {
+            "code": 0,
+            "message": "success",
+            "success": 1
+        }
+    else:
+        ret_data = {
+            "code": ret_code,
+            "message": "fail",
+            "success": 0
+        }
+    return jsonify(ret_data)
+
+
+@modbus.route('/frontbackPointMoveAction', methods=['POST'])
+def front_back_point_move_action():
+    data = request.get_json()
+    # 1 启动 0 停止
+    action = data.get(move_action_key)
+    ret_code = 0
+    try:
+        master.execute(1, cst.WRITE_SINGLE_COIL, 6, output_value=action)
+        c01 = master.execute(1, cst.READ_COILS, 1, 1)
+        if c01 == 0:
+            master.execute(1, cst.WRITE_SINGLE_COIL, 1, output_value=1)
+
+    except modbus_tk.modbus.ModbusError as e:
+        logger.error("%s- Code=%d" % (e, e.get_exception_code()))
+    except socket.timeout as e1:
+        ret_code = 1
+    if ret_code == 0:
+        ret_data = {
+            "code": 0,
+            "message": "success",
+            "success": 1
+        }
+    else:
+        ret_data = {
+            "code": ret_code,
+            "message": "fail",
+            "success": 0
+        }
+    return jsonify(ret_data)
+
+
+@modbus.route('/frontbackPointStopAction', methods=['POST'])
+def front_back_point_stop_action():
+    data = request.get_json()
+    # 1 启动 0 停止
+    action = data.get(move_action_key)
+    ret_code = 0
+    try:
+        master.execute(1, cst.WRITE_SINGLE_COIL, 7, output_value=action)
+
+    except modbus_tk.modbus.ModbusError as e:
+        logger.error("%s- Code=%d" % (e, e.get_exception_code()))
+    except socket.timeout as e1:
+        ret_code = 1
+    if ret_code == 0:
+        ret_data = {
+            "code": 0,
+            "message": "success",
+            "success": 1
+        }
+    else:
+        ret_data = {
+            "code": ret_code,
+            "message": "fail",
+            "success": 0
+        }
+    return jsonify(ret_data)
+
+
+@modbus.route('/setting', methods=['POST'])
+def setting():
+    data = request.get_json()
+    # 1 启动 0 停止
+    finallyTension = data.get("finallyTension")
+    finallyTensionTime = data.get("finallyTensionTime")
+    walkLength = data.get("walkLength")
+    walkSpeed = data.get("walkSpeed")
+    zeroLocation = data.get("zeroLocation")
+    Kp = data.get("Kp")
+    Tn = data.get("Tn")
+    Tv = data.get("Tv")
+    walkDeceleratorNumerator = data.get("walkDeceleratorNumerator")
+    walkDeceleratorDenominator = data.get("walkDeceleratorDenominator")
+    travelingAxleLength = data.get("travelingAxleLength")
+    tensionReductionNumerator = data.get("tensionReductionNumerator")
+    tensionReductionDeNumerator = data.get("tensionReductionDeNumerator")
+    tensionShaftPitch = data.get("tensionShaftPitch")
+    walkingAcceleration = data.get("walkingAcceleration")
+    walkingDeacceleration = data.get("walkingDeacceleration")
+    tensionPointSpeed = data.get("tensionPointSpeed")
+    walkPointSpeed = data.get("walkPointSpeed")
+    ret_code = 0
+    try:
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 37, output_value=finallyTension)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 41, output_value=finallyTensionTime)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 19, output_value=walkLength)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 21, output_value=walkSpeed)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 31, output_value=zeroLocation)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 23, output_value=Kp)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 23, output_value=Tn)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 27, output_value=Tv)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 1, output_value=walkDeceleratorNumerator)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 3, output_value=walkDeceleratorDenominator)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 5, output_value=travelingAxleLength)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 7, output_value=tensionReductionNumerator)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 9, output_value=tensionReductionDeNumerator)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 11, output_value=tensionShaftPitch)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 13, output_value=walkingAcceleration)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 15, output_value=walkingDeacceleration)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 42, output_value=tensionPointSpeed)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 44, output_value=walkPointSpeed)
+
+    except modbus_tk.modbus.ModbusError as e:
+        logger.error("%s- Code=%d" % (e, e.get_exception_code()))
+    except socket.timeout as e1:
+        ret_code = 1
+    if ret_code == 0:
+        ret_data = {
+            "code": 0,
+            "message": "success",
+            "success": 1
+        }
+    else:
+        ret_data = {
+            "code": ret_code,
+            "message": "fail",
+            "success": 0
+        }
+    return jsonify(ret_data)
+
+
+@modbus.route('/readData', methods=['POST'])
+def readData():
+    ret_code = 0
+    ret = {}
+    try:
+        finallyTension = master.execute(1, cst.READ_HOLDING_REGISTERS, 37, 1)
+        finallyTensionTime = master.execute(1, cst.READ_HOLDING_REGISTERS, 41, 1)
+        walkLength = master.execute(1, cst.READ_HOLDING_REGISTERS, 19, 1)
+        walkSpeed = master.execute(1, cst.READ_HOLDING_REGISTERS, 21, 1)
+        zeroLocation = master.execute(1, cst.READ_HOLDING_REGISTERS, 31, 1)
+        Kp = master.execute(1, cst.READ_HOLDING_REGISTERS, 23, 1)
+        Tn = master.execute(1, cst.READ_HOLDING_REGISTERS, 23, 1)
+        Tv = master.execute(1, cst.READ_HOLDING_REGISTERS, 27, 1)
+        walkDeceleratorNumerator = master.execute(1, cst.READ_HOLDING_REGISTERS, 1, 1)
+        walkDeceleratorDenominator = master.execute(1, cst.READ_HOLDING_REGISTERS, 3, 1)
+        travelingAxleLength = master.execute(1, cst.READ_HOLDING_REGISTERS, 5, 1)
+        tensionReductionNumerator = master.execute(1, cst.READ_HOLDING_REGISTERS, 7, 1)
+        tensionReductionDeNumerator = master.execute(1, cst.READ_HOLDING_REGISTERS, 9, 1)
+        tensionShaftPitch = master.execute(1, cst.READ_HOLDING_REGISTERS, 11, 1)
+        walkingAcceleration = master.execute(1, cst.READ_HOLDING_REGISTERS, 13, 1)
+        walkingDeacceleration = master.execute(1, cst.READ_HOLDING_REGISTERS, 15, 1)
+        tensionPointSpeed = master.execute(1, cst.READ_HOLDING_REGISTERS, 42, 1)
+        walkPointSpeed = master.execute(1, cst.READ_HOLDING_REGISTERS, 44, 1)
+        walk1States = master.execute(1, cst.READ_INPUT_REGISTERS, 1, 1)
+        walk2States = master.execute(1, cst.READ_INPUT_REGISTERS, 2, 1)
+        walk3States = master.execute(1, cst.READ_INPUT_REGISTERS, 3, 1)
+        tensionState = master.execute(1, cst.READ_INPUT_REGISTERS, 4, 1)
+        walkCurrentPosition = master.execute(1, cst.READ_INPUT_REGISTERS, 5, 1)
+        tensionForce = master.execute(1, cst.READ_INPUT_REGISTERS, 12, 1)
+        walkForce = master.execute(1, cst.READ_INPUT_REGISTERS, 14, 1)
+        walkPointState = master.execute(1, cst.READ_INPUT_REGISTERS, 18, 1)
+        walkEnable = master.execute(1, cst.READ_COILS, 1, 1)
+        walkStatus = master.execute(1, cst.READ_COILS, 16, 1)
+        ret["finallyTension"] = finallyTension
+        ret["finallyTensionTime"] = finallyTensionTime
+        ret["walkLength"] = walkLength
+        ret["walkSpeed"] = walkSpeed
+        ret["zeroLocation"] = zeroLocation
+        ret["Kp"] = Kp
+        ret["Tn"] = Tn
+        ret["Tv"] = Tv
+        ret["walkDeceleratorNumerator"] = walkDeceleratorNumerator
+        ret["walkDeceleratorDenominator"] = walkDeceleratorDenominator
+        ret["travelingAxleLength"] = travelingAxleLength
+        ret["tensionReductionNumerator"] = tensionReductionNumerator
+        ret["tensionReductionDeNumerator"] = tensionReductionDeNumerator
+        ret["tensionShaftPitch"] = tensionShaftPitch
+        ret["walkingAcceleration"] = walkingAcceleration
+        ret["walkingDeacceleration"] = walkingDeacceleration
+        ret["tensionPointSpeed"] = tensionPointSpeed
+        ret["walkPointSpeed"] = walkPointSpeed
+
+        ret["walk1States"] = walk1States
+        ret["walk2States"] = walk2States
+        ret["walk3States"] = walk3States
+        ret["tensionState"] = tensionState
+        ret["walkCurrentPosition"] = walkCurrentPosition
+        ret["tensionForce"] = tensionForce
+        ret["walkForce"] = walkForce
+        ret["walkPointState"] = walkPointState
+        ret["walkEnable"] = walkEnable
+        ret["walkStatus"] = walkStatus
+    except modbus_tk.modbus.ModbusError as e:
+        logger.error("%s- Code=%d" % (e, e.get_exception_code()))
+    except socket.timeout as e1:
+        ret_code = 1
+    if ret_code == 0:
+        ret_data = {
+            "code": 0,
+            "message": "success",
+            "success": 1,
+            "data": ret
+        }
+    else:
+        ret_data = {
+            "code": ret_code,
+            "message": "fail",
+            "success": 0
+        }
+    return jsonify(ret_data)
+
+
+@modbus.route('/reset', methods=['POST'])
+def reset():
+    data = request.get_json()
+    reset_int = data.get("reset")
+    try:
+        master.execute(1, cst.WRITE_SINGLE_COIL, 8, output_value=reset_int)
+    except modbus_tk.modbus.ModbusError as e:
+        logger.error("%s- Code=%d" % (e, e.get_exception_code()))
+    except socket.timeout as e1:
+        ret_code = 1
+    if ret_code == 0:
+        ret_data = {
+            "code": 0,
+            "message": "success",
+            "success": 1
+        }
+    else:
+        ret_data = {
+            "code": ret_code,
+            "message": "fail",
+            "success": 0
+        }
+    return jsonify(ret_data)
+
+
+@modbus.route('/leftRightLaunch', methods=['POST'])
+def leftRightLaunch():
+    data = request.get_json()
+    # 1 启动 0 停止
+    action_int = data.get("transversePointMove")
+    ret_code = 0
+    try:
+        master.execute(1, cst.WRITE_SINGLE_COIL, 17, output_value=action_int)
+        c04 = master.execute(1, cst.READ_COILS, 4, 1)
+        if c04 == 0:
+            master.execute(1, cst.WRITE_SINGLE_COIL, 4, output_value=1)
+
+    except modbus_tk.modbus.ModbusError as e:
+        logger.error("%s- Code=%d" % (e, e.get_exception_code()))
+    except socket.timeout as e1:
+        ret_code = 1
+    if ret_code == 0:
+        ret_data = {
+            "code": 0,
+            "message": "success",
+            "success": 1
+        }
+    else:
+        ret_data = {
+            "code": ret_code,
+            "message": "fail",
+            "success": 0
+        }
+    return jsonify(ret_data)
+
+
+@modbus.route('/leftRightOpen', methods=['POST'])
+def leftRightOpen():
+    data = request.get_json()
+    # 1 启动 0 停止
+    action_int = data.get("transversePointMove")
+    ret_code = 0
+    try:
+        master.execute(1, cst.WRITE_SINGLE_COIL, 13, output_value=action_int)
+        c04 = master.execute(1, cst.READ_COILS, 4, 1)
+        if c04 == 0:
+            master.execute(1, cst.WRITE_SINGLE_COIL, 4, output_value=1)
+
+        c10 = master.execute(1, cst.READ_COILS, 10, 1)
+        if c10 == 0:
+            master.execute(1, cst.WRITE_SINGLE_COIL, 10, output_value=1)
+
+    except modbus_tk.modbus.ModbusError as e:
+        logger.error("%s- Code=%d" % (e, e.get_exception_code()))
+    except socket.timeout as e1:
+        ret_code = 1
+    if ret_code == 0:
+        ret_data = {
+            "code": 0,
+            "message": "success",
+            "success": 1
+        }
+    else:
+        ret_data = {
+            "code": ret_code,
+            "message": "fail",
+            "success": 0
+        }
+    return jsonify(ret_data)
+
+
+@modbus.route('/leftRightTense', methods=['POST'])
+def leftRightTense():
+    data = request.get_json()
+    # 1 启动 0 停止
+    action_int = data.get("transversePointMove")
+    ret_code = 0
+    try:
+        master.execute(1, cst.WRITE_SINGLE_COIL, 14, output_value=action_int)
+        c04 = master.execute(1, cst.READ_COILS, 4, 1)
+        if c04 == 0:
+            master.execute(1, cst.WRITE_SINGLE_COIL, 4, output_value=1)
+
+        c10 = master.execute(1, cst.READ_COILS, 10, 1)
+        if c10 == 0:
+            master.execute(1, cst.WRITE_SINGLE_COIL, 10, output_value=1)
+
+    except modbus_tk.modbus.ModbusError as e:
+        logger.error("%s- Code=%d" % (e, e.get_exception_code()))
+    except socket.timeout as e1:
+        ret_code = 1
+    if ret_code == 0:
+        ret_data = {
+            "code": 0,
+            "message": "success",
+            "success": 1
+        }
+    else:
+        ret_data = {
+            "code": ret_code,
+            "message": "fail",
+            "success": 0
+        }
+    return jsonify(ret_data)
+
