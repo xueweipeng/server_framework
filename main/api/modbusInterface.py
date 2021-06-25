@@ -376,6 +376,34 @@ def leftRightLaunch():
     return jsonify(ret_data)
 
 
+@modbus.route('/leftRightStop', methods=['POST'])
+def leftRightStop():
+    data = request.get_json()
+    # 1 启动 0 停止
+    action_int = data.get("transversePointMove")
+    ret_code = 0
+    try:
+        master.execute(1, cst.WRITE_SINGLE_COIL, 18, output_value=action_int)
+
+    except modbus_tk.modbus.ModbusError as e:
+        logger.error("%s- Code=%d" % (e, e.get_exception_code()))
+    except socket.timeout as e1:
+        ret_code = 1
+    if ret_code == 0:
+        ret_data = {
+            "code": 0,
+            "message": "success",
+            "success": 1
+        }
+    else:
+        ret_data = {
+            "code": ret_code,
+            "message": "fail",
+            "success": 0
+        }
+    return jsonify(ret_data)
+
+
 @modbus.route('/leftRightOpen', methods=['POST'])
 def leftRightOpen():
     data = request.get_json()
