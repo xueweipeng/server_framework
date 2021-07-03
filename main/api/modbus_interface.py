@@ -88,6 +88,7 @@ def back_point_move_action():
     data = request.get_json()
     # 1 启动 0 停止
     action = data.get(move_action_key)
+    logger.info("action = %d" % action)
     ret_code = 0
     try:
         master.execute(1, cst.WRITE_SINGLE_COIL, 12, output_value=action)
@@ -122,6 +123,7 @@ def front_back_point_move_action():
     data = request.get_json()
     # 1 启动 0 停止
     action = data.get(move_action_key)
+    logger.info("action = %d" % action)
     ret_code = 0
     try:
         master.execute(1, cst.WRITE_SINGLE_COIL, 6, output_value=action)
@@ -153,6 +155,7 @@ def front_back_point_stop_action():
     data = request.get_json()
     # 1 启动 0 停止
     action = data.get(move_action_key)
+    logger.info("action = %d" % action)
     ret_code = 0
     try:
         master.execute(1, cst.WRITE_SINGLE_COIL, 7, output_value=action)
@@ -181,6 +184,7 @@ def setting():
     data = request.get_json()
     # 1 启动 0 停止
     finallyTension = data.get("finallyTension")
+    logger.info("finallyTension = %s" % finallyTension)
     finallyTensionTime = data.get("finallyTensionTime")
     walkLength = data.get("walkLength")
     walkSpeed = data.get("walkSpeed")
@@ -312,10 +316,16 @@ def readData():
             "data": ret
         }
     else:
+        ret["walk1States"] = 1
+        ret["walk2States"] = 2
+        ret["walk3States"] = 3
+        ret["tensionState"] = 4
+        ret["walkCurrentPosition"] = 5
         ret_data = {
             "code": ret_code,
             "message": "fail",
-            "success": 0
+            "success": 0,
+            "data": ret
         }
     return jsonify(ret_data)
 
@@ -324,6 +334,7 @@ def readData():
 def reset():
     data = request.get_json()
     reset_int = data.get("reset")
+    logger.info("reset_int = %d" % reset_int)
     try:
         master.execute(1, cst.WRITE_SINGLE_COIL, 8, output_value=reset_int)
     except modbus_tk.modbus.ModbusError as e:
@@ -350,6 +361,7 @@ def leftRightLaunch():
     data = request.get_json()
     # 1 启动 0 停止
     action_int = data.get("transversePointMove")
+    logger.info("action_int = %d" % action_int)
     ret_code = 0
     try:
         master.execute(1, cst.WRITE_SINGLE_COIL, 17, output_value=action_int)
@@ -381,6 +393,7 @@ def leftRightStop():
     data = request.get_json()
     # 1 启动 0 停止
     action_int = data.get("transversePointMove")
+    logger.info("action_int = %d" % action_int)
     ret_code = 0
     try:
         master.execute(1, cst.WRITE_SINGLE_COIL, 18, output_value=action_int)
@@ -409,6 +422,7 @@ def leftRightOpen():
     data = request.get_json()
     # 1 启动 0 停止
     action_int = data.get("transversePointMove")
+    logger.info("action_int = %d" % action_int)
     ret_code = 0
     try:
         master.execute(1, cst.WRITE_SINGLE_COIL, 13, output_value=action_int)
@@ -444,6 +458,7 @@ def leftRightTense():
     data = request.get_json()
     # 1 启动 0 停止
     action_int = data.get("transversePointMove")
+    logger.info("action_int = %d" % action_int)
     ret_code = 0
     try:
         master.execute(1, cst.WRITE_SINGLE_COIL, 14, output_value=action_int)
@@ -472,4 +487,3 @@ def leftRightTense():
             "success": 0
         }
     return jsonify(ret_data)
-

@@ -25,8 +25,10 @@ def register_route(app):
     app.register_blueprint(profile, url_prefix='/profile')
     from main.api.upgrade_interface import upgrade
     app.register_blueprint(upgrade, url_prefix='/upgrade')
-    from main.api.modbusInterface import modbus
+    from main.api.modbus_interface import modbus
     app.register_blueprint(modbus, url_prefix='/modbus')
+    from main.api.camera_interface import camera
+    app.register_blueprint(camera, url_prefix='/camera')
     return app
 
 
