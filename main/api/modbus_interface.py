@@ -8,7 +8,7 @@ import modbus_tk.defines as cst
 logger = modbus_tk.utils.create_logger("console")
 
 modbus = Blueprint("modbus", __name__)
-modbus_address = "192.168.1.66"
+modbus_address = "192.168.137.2"
 move_action_key = "verticalPointMove"
 
 # 连接MODBUS TCP从机
@@ -205,6 +205,12 @@ def front_back_point_stop_action():
 def setting():
     data = request.get_json()
     # 1 启动 0 停止
+    finallyTension = data.get("finallyTension")
+    logger.info("finallyTension = %s" % finallyTension)
+    finallyTensionTime = data.get("finallyTensionTime")
+    walkLength = data.get("walkLength")
+    walkSpeed = data.get("walkSpeed")
+    zeroLocation = data.get("zeroLocation")
     tensionFactor = data.get("tensionFactor")
     tensionOffset = data.get("tensionOffset")
     pullFactor = data.get("pullFactor")
@@ -224,7 +230,11 @@ def setting():
     walkPointSpeed = data.get("walkPointSpeed")
     ret_code = 0
     try:
-
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 37, output_value=finallyTension)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 41, output_value=finallyTensionTime)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 19, output_value=walkLength)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 21, output_value=walkSpeed)
+        master.execute(1, cst.WRITE_SINGLE_REGISTER, 31, output_value=zeroLocation)
         master.execute(1, cst.WRITE_SINGLE_REGISTER, 47, output_value=tensionFactor)
         master.execute(1, cst.WRITE_SINGLE_REGISTER, 49, output_value=tensionOffset)
         master.execute(1, cst.WRITE_SINGLE_REGISTER, 51, output_value=pullFactor)
@@ -267,6 +277,11 @@ def readData():
     ret_code = 0
     ret = {}
     try:
+        finallyTension = master.execute(1, cst.READ_HOLDING_REGISTERS, 37, 1)
+        finallyTensionTime = master.execute(1, cst.READ_HOLDING_REGISTERS, 41, 1)
+        walkLength = master.execute(1, cst.READ_HOLDING_REGISTERS, 19, 1)
+        walkSpeed = master.execute(1, cst.READ_HOLDING_REGISTERS, 21, 1)
+        zeroLocation = master.execute(1, cst.READ_HOLDING_REGISTERS, 31, 1)
         tensionFactor = master.execute(1, cst.READ_HOLDING_REGISTERS, 47, 1)
         tensionOffset = master.execute(1, cst.READ_HOLDING_REGISTERS, 49, 1)
         pullFactor = master.execute(1, cst.READ_HOLDING_REGISTERS, 51, 1)
@@ -294,6 +309,11 @@ def readData():
         walkPointState = master.execute(1, cst.READ_INPUT_REGISTERS, 18, 1)
         walkEnable = master.execute(1, cst.READ_COILS, 1, 1)
         walkStatus = master.execute(1, cst.READ_COILS, 16, 1)
+        ret["finallyTension"] = finallyTension
+        ret["finallyTensionTime"] = finallyTensionTime
+        ret["walkLength"] = walkLength
+        ret["walkSpeed"] = walkSpeed
+        ret["zeroLocation"] = zeroLocation
         ret["tensionFactor"] = tensionFactor
         ret["tensionOffset"] = tensionOffset
         ret["pullFactor"] = pullFactor
