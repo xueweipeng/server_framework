@@ -1,9 +1,16 @@
 import socket
+import time
 
 import modbus_tk
 import modbus_tk.modbus_tcp as modbus_tcp
+import numpy as numpy
 from flask import Blueprint, request, jsonify
 import modbus_tk.defines as cst
+import struct
+
+from pyModbusTCP import utils
+
+from main.api.cal import WriteFloat, ReadFloat
 
 logger = modbus_tk.utils.create_logger("console")
 
@@ -11,28 +18,34 @@ modbus = Blueprint("modbus", __name__)
 modbus_address = "192.168.137.2"
 move_action_key = "verticalPointMove"
 
+
+def int_to_float(f):
+    b32_l = utils.encode_ieee(f)
+    b16_l = utils.long_list_to_word([b32_l])
+    return b16_l
+
+
 # 连接MODBUS TCP从机
-master = modbus_tcp.TcpMaster(host=modbus_address)
-master.set_timeout(5.0)
+master = modbus_tcp.TcpMaster(host=modbus_address, port=502)
 logger.info("modbus connected")
 try:
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 47, output_value=1.00)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 49, output_value=1.00)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 51, output_value=1.00)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 43, output_value=1.00)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 23, output_value=200.00)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 25, output_value=8.00)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 27, output_value=0.00)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 1, output_value=1.00)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 3, output_value=10.00)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 5, output_value=20.00)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 7, output_value=1.00)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 9, output_value=2.00)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 11, output_value=1.00)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 13, output_value=0.000100)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 15, output_value=0.000100)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 42, output_value=0.01)
-    master.execute(1, cst.WRITE_SINGLE_REGISTER, 44, output_value=0.000100)
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 47, output_value=WriteFloat(1.00))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 49, output_value=WriteFloat(1.00))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 51, output_value=WriteFloat(1.00))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 43, output_value=WriteFloat(1.00))
+    master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 23, output_value=WriteFloat(300.00))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 25, output_value=WriteFloat(8.00))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 27, output_value=WriteFloat(0.00))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 1, output_value=WriteFloat(1.00))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 3, output_value=WriteFloat(10.00))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 5, output_value=WriteFloat(20.00))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 7, output_value=WriteFloat(1.00))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 9, output_value=WriteFloat(2.00))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 11, output_value=WriteFloat(1.00))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 13, output_value=WriteFloat(0.0001))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 15, output_value=WriteFloat(0.000100))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 42, output_value=WriteFloat(0.01))
+    # master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 44, output_value=WriteFloat(0.000100))
 except modbus_tk.modbus.ModbusError as e:
     logger.error("%s- Code=%d" % (e, e.get_exception_code()))
 except socket.timeout as e1:
@@ -42,7 +55,6 @@ except socket.timeout as e1:
 @modbus.route('/test', methods=['POST'], strict_slashes=False)
 def modbus_tcp_test():
     try:
-
         # 读保持寄存器
         demo1 = master.execute(1, cst.READ_HOLDING_REGISTERS, 0, 9)
         print(demo1)
@@ -78,14 +90,26 @@ def front_point_move_action():
     action = data.get(move_action_key)
     ret_code = 0
     try:
-        master.execute(1, cst.WRITE_SINGLE_COIL, 11, output_value=action)
-        c01 = master.execute(1, cst.READ_COILS, 1, 1)
-        if c01 == 0:
-            master.execute(1, cst.WRITE_SINGLE_COIL, 1, output_value=1)
-
-        c16 = master.execute(1, cst.READ_COILS, 16, 1)
-        if c16 == 1:
-            master.execute(1, cst.WRITE_SINGLE_COIL, 16, 0)
+        # c01 = master.execute(1, cst.READ_COILS, 1, 1)
+        # if c01 == 0:
+        master.execute(1, cst.WRITE_SINGLE_COIL, 1, output_value=1)
+        time.sleep(1)
+        # c16 = master.execute(1, cst.READ_COILS, 16, 1)
+        # if c16 == 1:
+        master.execute(1, cst.WRITE_SINGLE_COIL, 16, output_value=1)
+        time.sleep(1)
+        master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 37, output_value=WriteFloat(500.00))
+        master.execute(1, cst.WRITE_MULTIPLE_REGISTERS, 41, output_value=WriteFloat(20.00))
+        master.execute(1, cst.WRITE_SINGLE_COIL, 6, output_value=1)
+        time.sleep(1)
+        logger.info(ReadFloat(master.execute(1, cst.READ_HOLDING_REGISTERS, 37, 2)))
+        time.sleep(1)
+        logger.info(ReadFloat(master.execute(1, cst.READ_HOLDING_REGISTERS, 41, 2)))
+        time.sleep(1)
+        logger.info(master.execute(1, cst.READ_COILS, 16, 1))
+        time.sleep(1)
+        logger.info(master.execute(1, cst.READ_COILS, 1, 1))
+        master.execute(1, cst.WRITE_SINGLE_COIL, 6, output_value=1)
     except modbus_tk.modbus.ModbusError as e:
         logger.error("%s- Code=%d" % (e, e.get_exception_code()))
     except socket.timeout as e1:
@@ -148,11 +172,8 @@ def front_back_point_move_action():
     logger.info("action = %d" % action)
     ret_code = 0
     try:
+        master.execute(1, cst.WRITE_SINGLE_COIL, 1, output_value=1)
         master.execute(1, cst.WRITE_SINGLE_COIL, 6, output_value=action)
-        c01 = master.execute(1, cst.READ_COILS, 1, 1)
-        if c01 == 0:
-            master.execute(1, cst.WRITE_SINGLE_COIL, 1, output_value=1)
-
     except modbus_tk.modbus.ModbusError as e:
         logger.error("%s- Code=%d" % (e, e.get_exception_code()))
     except socket.timeout as e1:

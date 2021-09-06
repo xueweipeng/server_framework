@@ -7,3 +7,5 @@ blue
 crypto
 pymysql
 Flask==0.12.2
+six
+pyModbusTCP
