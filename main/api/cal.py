@@ -1,7 +1,7 @@
 import struct
 
 
-def ReadFloat(*args, reverse=False):
+def ReadFloat(*args, reverse=True):
     for n, m in args:
         n, m = '%04x' % n, '%04x' % m
     if reverse:
@@ -14,7 +14,7 @@ def ReadFloat(*args, reverse=False):
     return y
 
 
-def WriteFloat(value, reverse=False):
+def WriteFloat(value, reverse=True):
     y_bytes = struct.pack('!f', value)
     # y_hex = bytes.hex(y_bytes)
     y_hex = ''.join(['%02x' % i for i in y_bytes])
