@@ -6,7 +6,7 @@ conf~=0.4.1
 blue~=0.7.0
 crypto~=1.4.1
 pymysql~=1.0.2
-Flask==0.12.2
+Flask==1.0
 six
 pyModbusTCP~=0.1.10
 requests~=2.26.0
