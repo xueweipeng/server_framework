@@ -1,4 +1,7 @@
+import os
+
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 
 """
 1、获取课程信息接口（参数：无）
@@ -32,6 +35,17 @@ def register_route(app):
     return app
 
 
+db = SQLAlchemy()
 application = Flask(__name__)
 app = register_route(application)
-
+# 初始化App配置
+# SQLALCHEMY_DATABASE_URI 配置 SQLAlchemy 的链接字符串儿
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.getcwd() + os.path.sep + "picFile.db"
+# SQLALCHEMY_POOL_SIZE 配置 SQLAlchemy 的连接池大小
+# app.config["SQLALCHEMY_POOL_SIZE"] = 5
+# SQLALCHEMY_POOL_TIMEOUT 配置 SQLAlchemy 的连接超时时间
+# app.config["SQLALCHEMY_POOL_TIMEOUT"] = 15
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db.init_app(app)
+if not os.path.exists(os.getcwd() + os.path.sep + "picFile.db"):
+    db.create_all(app=app)

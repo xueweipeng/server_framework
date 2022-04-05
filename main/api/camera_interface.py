@@ -6,7 +6,9 @@ import time
 import requests
 from flask import Blueprint, request, jsonify
 
+from main import db
 from main.api import ThreadFlag
+from main.bean.pic_file_bean import PicFile
 
 camera = Blueprint("camera", __name__)
 
@@ -85,6 +87,39 @@ def snapShot():
         ret_code = 0
     else:
         ret_code = 1
+
+    # ret_code = 1
+    if ret_code == 0:
+        ret = {'filename': filename}
+        ret_data = {
+            "code": 0,
+            "message": "success",
+            "success": 1,
+            "data": ret
+        }
+    else:
+        ret_data = {
+            "code": ret_code,
+            "message": "fail",
+            "success": 0
+        }
+    return jsonify(ret_data)
+
+
+# 拍照
+@camera.route('/testdb', methods=['POST'])
+def testdb():
+    ts = time.localtime()
+    filename = time.strftime("%Y-%m-%d-%H-%M-%S-snapshot.jpg", ts)
+
+    abspath = 'snapshot/' + filename
+    data = PicFile(path=abspath, timestamp=time.mktime(ts))
+    db.session.add(data)
+    db.session.commit()
+    # if os.path.getsize('snapshot/' + filename) > 0:
+    #     ret_code = 0
+    # else:
+    ret_code = 1
 
     # ret_code = 1
     if ret_code == 0:
